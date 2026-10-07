@@ -1,0 +1,25 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Public site content: anyone can read, nobody can write from the browser.
+    // Edit content in the Firebase Console, or with `npm run seed` (Admin SDK).
+    match /{col}/{id} {
+      allow read: if col in ['faculty','notices','events','recruiters','achievements','projects'];
+      allow write: if false;
+    }
+    match /site/{id} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Contact form: anyone may CREATE a message with a strict shape; nobody can read it from the browser.
+    match /messages/{id} {
+      allow create: if request.resource.data.keys().hasOnly(['name','email','message','createdAt'])
+        && request.resource.data.name is string    && request.resource.data.name.size()    > 0 && request.resource.data.name.size()    < 120
+        && request.resource.data.email is string   && request.resource.data.email.size()   > 3 && request.resource.data.email.size()   < 200
+        && request.resource.data.message is string && request.resource.data.message.size() > 0 && request.resource.data.message.size() < 2000;
+      allow read, update, delete: if false;
+    }
+  }
+}
